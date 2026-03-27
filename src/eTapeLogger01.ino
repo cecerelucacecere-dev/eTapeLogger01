@@ -26,7 +26,8 @@ const char *eventName = "eTape Log";
 
 const pin_t ETAPE_PIN = A0;     // your eTape on A0
 const float VREF      = 3.3f;   // Boron ADC full-scale
-const int   NUMSAMPLES = 20;   // Amount of samples taken for smoothing
+const int   NUMSAMPLES = 20;    // Amount of samples taken for smoothing
+const int   batchSize = 3;      // Amount of readings in a batch
 
 //declaration of variables
 FuelGauge fuel;
@@ -44,7 +45,7 @@ struct Reading
 };
 
 Reading currentReading;
-retained Reading readings[3]; //3 readings in 3 minutes
+retained Reading readings[batchSize]; //3 readings in 3 minutes
 retained int readingCount = 0;
 
 //declaration of functions
@@ -79,7 +80,7 @@ void loop() {
     delay((uint32_t)(postDelay / 1ms));
 
     // 5) Publish batch measurement
-    if (readingCount >= 3){
+    if (readingCount >= batchSize){
         publishBatch();
     }
     // 6) Go to sleep
@@ -122,7 +123,7 @@ void takeMeasurement() {
 
 void storeReading() {
 
-    if (readingCount < 3) {
+    if (readingCount < batchSize) {
         readings[readingCount] = currentReading;
         readingCount++;
 
