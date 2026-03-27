@@ -12,7 +12,7 @@ SYSTEM_THREAD(ENABLED); // System thread defaults to on in 6.2.0 and later and t
 SerialLogHandler logHandler;
 
 // Sleep time between cycles (measurement period)
-const std::chrono::minutes publishPeriod = 5min;
+const std::chrono::minutes publishPeriod = 1min;
 
 // Time to turn sleep OFF off before taking a measurement
 const std::chrono::seconds sensorWarmup = 10s;
@@ -31,17 +31,20 @@ const int   NUMSAMPLES = 20;   // Amount of samples taken for smoothing
 //declaration of variables
 FuelGauge fuel;
 
-struct eTapeLogger01
-{
-    int   v = 0;                
-    float depth    = 0.0f;
-    float volts    = 0.0f;
-    float batterySoc = 0.0f;
+int   v = 0;
+
+struct Reading
+{                 
+    float depth;
+    float volts;
+    float batterySoc;
     float batteryVolts;
     float cellStrength;
+    unsigned long timestamp;
 };
 
-retained Reading readings[6]; //6 readings in 30 minutes
+Reading currentReading;
+retained Reading readings[3]; //3 readings in 3 minutes
 retained int readingCount = 0;
 
 //declaration of functions
@@ -57,7 +60,7 @@ void setup() {
     Serial.begin(9600);
     waitFor(Serial.isConnected, 3000);
     Log.info("Starting eTape logger");
-    batt_settings();
+    battSettings();
     
 }
 
@@ -76,7 +79,7 @@ void loop() {
     delay((uint32_t)(postDelay / 1ms));
 
     // 5) Publish batch measurement
-    if (readingCount >= 6){
+    if (readingCount >= 3){
         publishBatch();
     }
     // 6) Go to sleep
@@ -115,10 +118,9 @@ void takeMeasurement() {
     cellStrength = sig.getStrength();
 }
 
-
 void storeReading() {
 
-    if (readingCount < 6) {
+    if (readingCount < 3) {
         readings[readingCount].volts = volts;
         readings[readingCount].depth = depth;
         readings[readingCount].batterySoc = batterySoc;
@@ -150,7 +152,7 @@ void publishBatch() {
             char temp[64];
 
             snprintf(temp,sizeof(temp),
-            "[%lu,%.2f,%.2f,%.2f,%.2f]",
+            "[%lu,%.2f,%.2f,%.2f,%.2f,%.2f]",
             readings[i].timestamp,
             readings[i].depth,
             readings[i].batteryVolts,
@@ -186,7 +188,7 @@ void goToSleep() {
     // On wake, we drop back into loop() and do the cycle again
 }
 
-void batt_settings() {
+void battSettings() {
   
   SystemPowerConfiguration conf; 
   conf.powerSourceMaxCurrent(900)    // 5W / 5V = 1000mA. 900mA is the closest PMIC register setting.
