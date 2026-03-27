@@ -98,36 +98,32 @@ void takeMeasurement() {
 
     float smoothed = (float)sum / (float)NUMSAMPLES;
 
-    volts = (smoothed / 4095.0f) * VREF;
+    currentReading.volts = (smoothed / 4095.0f) * VREF;
 
-    if (volts < 0.05f) {
-        depth = 0.0f;
+    if (currentReading.volts < 0.05f) {
+        currentReading.depth = 0.0f;
     }
-    else if (volts >= 0.05f && volts < 0.1f) {
-        depth = 0.762f;   // small depth placeholder
+    else if (currentReading.volts >= 0.05f && currentReading.volts < 0.1f) {
+        currentReading.depth = 0.762f;   // small depth placeholder
     }
     else {
-        depth = (volts * 19.8f - 0.2271f) - 2.54f;
+        currentReading.depth = (currentReading.volts * 19.8f - 0.2271f) - 2.54f;
     }
 
     // Update battery State of Charge(SoC)
-    batterySoc = System.batteryCharge();
-    batteryVolts = fuel.getVCell();
+    currentReading.batterySoc = System.batteryCharge();
+    currentReading.batteryVolts = fuel.getVCell();
 
     CellularSignal sig = Cellular.RSSI();
-    cellStrength = sig.getStrength();
+    currentReading.cellStrength = sig.getStrength();
+
+    currentReading.timestamp = Time.now();
 }
 
 void storeReading() {
 
     if (readingCount < 3) {
-        readings[readingCount].volts = volts;
-        readings[readingCount].depth = depth;
-        readings[readingCount].batterySoc = batterySoc;
-        readings[readingCount].batteryVolts = batteryVolts;
-        readings[readingCount].cellStrength = cellStrength;
-        readings[readingCount].timestamp = Time.now();
-
+        readings[readingCount] = currentReading;
         readingCount++;
 
     }
