@@ -121,7 +121,7 @@ void publishMeasurement() {
         //char totalBuf[128];
         
         //print to SHEETS
-        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", cellStrength, depth, batterySoc, batteryVolts);
+        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", "It Worked!", depth, batterySoc, batteryVolts);
 
         Particle.publish(eventName, sheetBuf, PRIVATE);
         
