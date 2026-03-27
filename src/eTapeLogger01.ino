@@ -12,13 +12,13 @@ SYSTEM_THREAD(ENABLED); // System thread defaults to on in 6.2.0 and later and t
 SerialLogHandler logHandler;
 
 // Sleep time between cycles (measurement period)
-const std::chrono::minutes publishPeriod = 1min;
+const std::chrono::minutes publishPeriod = 5min;
 
 // Time to turn sleep OFF off before taking a measurement
 const std::chrono::seconds sensorWarmup = 10s;
 
 // Time until sleep is turned ON after taking a measurement
-const std::chrono::seconds postDelay = 60s;
+const std::chrono::seconds postDelay = 10s;
 
 // The event name to publish with
 const char *eventName = "eTape Log";
@@ -31,19 +31,26 @@ const int   NUMSAMPLES = 20;   // Amount of samples taken for smoothing
 //declaration of variables
 FuelGauge fuel;
 
-int   v = 0;                
-float depth    = 0.0f;
-float volts    = 0.0f;
-float depthin  = 0.0f;
-float batterySoc = 0.0f;
-float batteryVolts;
-float cellStrength;
+struct eTapeLogger01
+{
+    int   v = 0;                
+    float depth    = 0.0f;
+    float volts    = 0.0f;
+    float depthin  = 0.0f;
+    float batterySoc = 0.0f;
+    float batteryVolts;
+    float cellStrength;
+};
+
+retained Reading readings[6]; //6 readings in 30 minutes
+retained int readingCount = 0;
 
 //declaration of functions
 void takeMeasurement();         // Take a reading
-void publishMeasurement();      // Publish reading to SHEETS
+void publishBatch();            // Publish readings to Google SHEETS
 void goToSleep();               // Go into sleep mode
-void batt_settings();           // Configure PMIC
+void battSettings();            // Configure PMIC
+void storeReading();            // batch load readings
 
 void setup() {
     
@@ -61,15 +68,19 @@ void loop() {
     delay((uint32_t)(sensorWarmup / 1ms));              //Turn sleep OFF
 
     // 2) Take a measurement
-    takeMeasurement();                              
-
-    // 3) Publish the measurement
-    publishMeasurement();
+    takeMeasurement();    
+    
+    // 3) Store reading internally
+    storeReading();
 
     // 4) Post-measurement delay
     delay((uint32_t)(postDelay / 1ms));
 
-    // 5) Go to sleep until next cycle
+    // 5) Publish batch measurement
+    if (readingCount >= 6){
+        publishBatch();
+    }
+    // 6) Go to sleep
     goToSleep();
 }
 
@@ -108,8 +119,24 @@ void takeMeasurement() {
     cellStrength = sig.getStrength();
 }
 
+
+void storeReading() {
+
+    if (readingCount < 6) {
+        readings[readingCount].volts = volts;
+        readings[readingCount].depth = depth;
+        readings[readingCount].depthin = depthin;
+        readings[readingCount].batterySoc = batterySoc;
+        readings[readingCount].batteryVolts = batteryVolts;
+        readings[readingCount].cellStrength = cellStrength;
+        readings[readingCount].timestamp = Time.now();
+
+        readingCount++;
+
+    }
+}
 // prepares a JSON-ish array and publishes it
-void publishMeasurement() {
+void publishBatch() {
    
     if (!Particle.connected()) {
         Particle.connect();
@@ -118,17 +145,36 @@ void publishMeasurement() {
     }
 
     if (Particle.connected()) {
-        char sheetBuf[128];
-        //char totalBuf[128];
         
-        //print to SHEETS
-        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", cellStrength, depth, batterySoc, batteryVolts);
+        char payload[512];
+        payload[0] = '\0';
 
-        Particle.publish(eventName, sheetBuf, PRIVATE);
+        strcat(payload, "[");
         
-        //snprintf(totalBuf, sizeof(totalBuf), "[%.3f,%.3f,%.3f,%.1f,%.2f]", volts, depth, depthin, batterySoc, batteryVolts, cellStrength);
+        for (int i = 0; i < readingCount; i++){
+            char temp[64];
 
-        //Particle.publish(eventName2, totalBuf, PRIVATE);
+            snprintf(temp,sizeof(temp),
+            "[%lu,%.2f,%.2f,%.2f,%.2f]",
+            readings[i].timestamp,
+            readings[i].depth,
+            readings[i].batteryVolts,
+            readings[i].cellStrength,
+        );
+
+        strcat(payload, temp);
+
+        if (i < (readingCount - 1)){
+            strcat(payload, ",");
+        }
+        }
+
+        strcat(payload, "]");
+
+        Particle.publish(eventName, payload, PRIVATE);
+
+        readingCount = 0;
+
     }
 }
 
