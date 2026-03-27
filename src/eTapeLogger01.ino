@@ -36,7 +36,6 @@ struct eTapeLogger01
     int   v = 0;                
     float depth    = 0.0f;
     float volts    = 0.0f;
-    float depthin  = 0.0f;
     float batterySoc = 0.0f;
     float batteryVolts;
     float cellStrength;
@@ -100,15 +99,12 @@ void takeMeasurement() {
 
     if (volts < 0.05f) {
         depth = 0.0f;
-        depthin = 0.0f;
     }
     else if (volts >= 0.05f && volts < 0.1f) {
         depth = 0.762f;   // small depth placeholder
-        depthin = 0.3f;
     }
     else {
         depth = (volts * 19.8f - 0.2271f) - 2.54f;
-        depthin = depth / 2.54f;
     }
 
     // Update battery State of Charge(SoC)
@@ -125,7 +121,6 @@ void storeReading() {
     if (readingCount < 6) {
         readings[readingCount].volts = volts;
         readings[readingCount].depth = depth;
-        readings[readingCount].depthin = depthin;
         readings[readingCount].batterySoc = batterySoc;
         readings[readingCount].batteryVolts = batteryVolts;
         readings[readingCount].cellStrength = cellStrength;
@@ -160,6 +155,8 @@ void publishBatch() {
             readings[i].depth,
             readings[i].batteryVolts,
             readings[i].cellStrength,
+            readings[i].volts,
+            readings[i].batterySoc
         );
 
         strcat(payload, temp);
