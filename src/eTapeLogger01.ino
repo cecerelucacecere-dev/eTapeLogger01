@@ -30,6 +30,7 @@ const int   NUMSAMPLES = 20;   // Amount of samples taken for smoothing
 
 //declaration of variables
 FuelGauge fuel;
+CellularSignal sig = Cellular.RSSI();
 
 int   v = 0;                
 float depth    = 0.0f;
@@ -37,6 +38,7 @@ float volts    = 0.0f;
 float depthin  = 0.0f;
 float batterySoc = 0.0f;
 float batteryVolts;
+float cellStrength;
 
 //declaration of functions
 void takeMeasurement();         // Take a reading
@@ -102,6 +104,7 @@ void takeMeasurement() {
     // Update battery State of Charge(SoC)
     batterySoc = System.batteryCharge();
     batteryVolts = fuel.getVCell();
+    cellStrength = sig.getStrength();
 }
 
 // prepares a JSON-ish array and publishes it
@@ -118,11 +121,11 @@ void publishMeasurement() {
         //char totalBuf[128];
         
         //print to SHEETS
-        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", volts, depth, batterySoc, batteryVolts);
+        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", cellStrength, depth, batterySoc, batteryVolts);
 
         Particle.publish(eventName, sheetBuf, PRIVATE);
         
-        //snprintf(totalBuf, sizeof(totalBuf), "[%.3f,%.3f,%.3f,%.1f,%.2f]", volts, depth, depthin, batterySoc, batteryVolts);
+        //snprintf(totalBuf, sizeof(totalBuf), "[%.3f,%.3f,%.3f,%.1f,%.2f]", volts, depth, depthin, batterySoc, batteryVolts, cellStrength);
 
         //Particle.publish(eventName2, totalBuf, PRIVATE);
     }
