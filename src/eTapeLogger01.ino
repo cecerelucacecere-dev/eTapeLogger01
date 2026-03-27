@@ -18,7 +18,7 @@ const std::chrono::minutes publishPeriod = 1min;
 const std::chrono::seconds sensorWarmup = 10s;
 
 // Time until sleep is turned ON after taking a measurement
-const std::chrono::seconds postDelay = 10s;
+const std::chrono::seconds postDelay = 60s;
 
 // The event name to publish with
 const char *eventName = "eTape Log";
@@ -30,7 +30,6 @@ const int   NUMSAMPLES = 20;   // Amount of samples taken for smoothing
 
 //declaration of variables
 FuelGauge fuel;
-CellularSignal sig = Cellular.RSSI();
 
 int   v = 0;                
 float depth    = 0.0f;
@@ -104,6 +103,8 @@ void takeMeasurement() {
     // Update battery State of Charge(SoC)
     batterySoc = System.batteryCharge();
     batteryVolts = fuel.getVCell();
+
+    CellularSignal sig = Cellular.RSSI();
     cellStrength = sig.getStrength();
 }
 
@@ -121,7 +122,7 @@ void publishMeasurement() {
         //char totalBuf[128];
         
         //print to SHEETS
-        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", "It Worked!", depth, batterySoc, batteryVolts);
+        snprintf(sheetBuf, sizeof(sheetBuf), "[%.3f,%.3f,%.1f,%.2f]", cellStrength, depth, batterySoc, batteryVolts);
 
         Particle.publish(eventName, sheetBuf, PRIVATE);
         
