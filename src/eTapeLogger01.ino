@@ -1,12 +1,11 @@
 //Project Name: eTape Code
 //Author: Luca Cecere
 //Credit to CSU Agricultural Water Quality Program Team
-//This is a test to see if pushing will work
 
 #include "Particle.h"
 
 #ifndef SYSTEM_VERSION_v620
-SYSTEM_THREAD(ENABLED); // System thread defaults to on in 6.2.0 and later and this line is not required
+SYSTEM_THREAD(ENABLED); 
 #endif
 
 SerialLogHandler logHandler;
@@ -22,14 +21,13 @@ const std::chrono::seconds postDelay = 10s;
 
 // The event name to publish with
 const char *eventName = "eTape Log 1";
-//const char *eventName2 = "Total Log";
 
-const pin_t ETAPE_PIN = A0;     // your eTape on A0
+const pin_t ETAPE_PIN = A0;     // eTape on A0
 const float VREF      = 3.3f;   // Boron ADC full-scale
 const int   NUMSAMPLES = 20;    // Amount of samples taken for smoothing
 const int   batchSize = 3;      // Amount of readings in a batch
 
-//declaration of variables
+//Declaration of variables
 FuelGauge fuel;
 
 int   v = 0;
@@ -45,7 +43,7 @@ struct Reading
 };
 
 Reading currentReading;
-retained Reading readings[batchSize]; //3 readings in 3 minutes
+retained Reading readings[batchSize]; 
 retained int readingCount = 0;
 
 //declaration of functions
@@ -53,7 +51,7 @@ void takeMeasurement();         // Take a reading
 void publishBatch();            // Publish readings to Google SHEETS
 void goToSleep();               // Go into sleep mode
 void battSettings();            // Configure PMIC
-void storeReading();            // batch load readings
+void storeReading();            // Batch load readings
 
 void setup() {
     
@@ -129,7 +127,7 @@ void storeReading() {
 
     }
 }
-// prepares a JSON-ish array and publishes it
+// prepares array and publishes it
 void publishBatch() {
    
     if (!Particle.connected()) {
@@ -182,7 +180,7 @@ void goToSleep() {
       .network(NETWORK_INTERFACE_CELLULAR, SystemSleepNetworkFlag::INACTIVE_STANDBY);
 
     System.sleep(config);
-    // On wake, we drop back into loop() and do the cycle again
+    // On wake cycle again
 }
 
 void battSettings() {
