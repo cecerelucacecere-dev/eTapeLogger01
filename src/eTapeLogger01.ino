@@ -21,7 +21,7 @@ const std::chrono::seconds sensorWarmup = 10s;
 const std::chrono::seconds postDelay = 10s;
 
 // The event name to publish with
-const char *eventName = "eTape Log";
+const char *eventName = "eTape Log 1";
 //const char *eventName2 = "Total Log";
 
 const pin_t ETAPE_PIN = A0;     // your eTape on A0
@@ -79,7 +79,7 @@ void loop() {
     // 4) Post-measurement delay
     delay((uint32_t)(postDelay / 1ms));
 
-    // 5) Publish batch measurement
+    // 5) Publish batch measurment
     if (readingCount >= batchSize){
         publishBatch();
     }
