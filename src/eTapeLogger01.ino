@@ -54,7 +54,7 @@ struct Reading
 };
 
 Reading currentReading;
-retained Reading readings[batchSize]; 
+retained Reading readings[maxBufferSize]; 
 retained int readingCount = 0;
 
 //declaration of functions
@@ -96,7 +96,7 @@ void loop() {
     delay((uint32_t)(postDelay / 1ms));
 
     // 5) Publish batch measurment
-    if (readingCount >= batchSize){
+    if (readingCount >= maxBufferSize){
         publishBatch();
     }
     // 6) Go to sleep
@@ -219,7 +219,7 @@ void battSettings() {
   conf.powerSourceMaxCurrent(900)    // 5W / 5V = 1000mA. 900mA is the closest PMIC register setting.
       .powerSourceMinVoltage(3880)  
       .batteryChargeCurrent(500)
-      .batteryChargeVoltage(4280);    // you can increase to 4208 which is the max, for 4.2v 
+      .batteryChargeVoltage(4210);    // you can increase to 4208 which is the max, for 4.2v 
       
   System.setPowerConfiguration(conf);
 }
